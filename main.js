@@ -1,13 +1,11 @@
 import * as THREE from 'three';
-import * as DAT from 'dat.gui';
 import gsap from 'gsap'; // GreenSock Animation Platform
 
 // If you wanna be able to rotate the plane around with your mouse:
-//import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-//new OrbitControls(camera, renderer.domElement)
+// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+// new OrbitControls(camera, renderer.domElement)
 
-// Create a GUI object to make your life easier
-const gui = new DAT.GUI();
+// Creates a object to hold our preferred values for properties of the plane object
 const world = {
   plane: {
     width: 400,
@@ -16,12 +14,15 @@ const world = {
     heightSegments: 30,
   }
 }
-
+/* If you wanna use an interface to debug/test different values for the plane
+import * as DAT from 'dat.gui';
+const gui = new DAT.GUI();
 // Adds the attributes to the interface we created above
 gui.add(world.plane, 'width', 1, 500).onChange(generatePlane); // Scale goes from 1 to 500
 gui.add(world.plane, 'height', 1, 500).onChange(generatePlane); 
 gui.add(world.plane, 'widthSegments', 1, 160).onChange(generatePlane);
 gui.add(world.plane, 'heightSegments', 1, 160).onChange(generatePlane);
+*/
 
 // Creates new essential objects for the project
 const scene = new THREE.Scene();
@@ -29,8 +30,6 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(devicePixelRatio);
 document.body.appendChild(renderer.domElement);
-
-
 const raycaster = new THREE.Raycaster();
 
 const camera = new THREE.PerspectiveCamera(
@@ -58,13 +57,14 @@ const planeMaterial = new THREE.MeshPhongMaterial({
 const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
 scene.add(planeMesh);
 
+
 // And initialize it 
 generatePlane();
 
 // Adds a light source in front of the plane,
 // otherwise you won't see shit due to the material we used
 // for the plane (MeshPhong)
-const light = new THREE.DirectionalLight(0xffffff, 1);
+const light = new THREE.DirectionalLight(0xffffff, 1); // White light, 100% intensity
 light.position.set(0, -1, 1);
 scene.add(light);
 
@@ -108,14 +108,18 @@ function generatePlane() {
   planeMesh.geometry.attributes.position.originalPosition =
     planeMesh.geometry.attributes.position.array
 
-  const colors = []
+  
+  const colors = [] // Here we add the color we want to each vertice, whice we store in an array
   for (let i = 0; i < planeMesh.geometry.attributes.position.count; i++) {
-    colors.push(0, 0.19, 0.4)
+    // R G B values. 
+    // Goes up to 2.55, which is the brightest white
+    colors.push(0.1, 0.5, 0.8); 
   }
 
+  // Sets the color of the plane
   planeMesh.geometry.setAttribute(
     'color',
-    new THREE.BufferAttribute(
+    new THREE.BufferAttribute( // https://threejs.org/docs/#api/en/core/BufferAttribute
       new Float32Array(colors), 3
     )
   );
@@ -170,16 +174,19 @@ function animate() {
 
     intersects[0].object.geometry.attributes.color.needsUpdate = true
 
+    // Once the hover effect is over it goes back to this color
+    // Is the same color as the once set in the start 
     const initialColor = {
-      r: 0,
-      g: 0.19,
-      b: 0.4
-    }
-
-    const hoverColor = {
       r: 0.1,
       g: 0.5,
-      b: 1
+      b: 0.8
+    }
+
+    // Self-explanatory
+    const hoverColor = {
+      r: 1.5,
+      g: 1.5,
+      b: 1.5
     }
 
     // Using the gsap library to make the hover effect easier to achieve

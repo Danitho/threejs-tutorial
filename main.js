@@ -1,7 +1,10 @@
 import * as THREE from 'three';
 import * as DAT from 'dat.gui';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import gsap from 'gsap';
+import gsap from 'gsap'; // GreenSock Animation Platform
+
+// If you wanna be able to rotate the plane around with your mouse:
+//import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+//new OrbitControls(camera, renderer.domElement)
 
 // Create a GUI object to make your life easier
 const gui = new DAT.GUI();
@@ -20,6 +23,61 @@ gui.add(world.plane, 'height', 1, 500).onChange(generatePlane);
 gui.add(world.plane, 'widthSegments', 1, 160).onChange(generatePlane);
 gui.add(world.plane, 'heightSegments', 1, 160).onChange(generatePlane);
 
+// Creates new essential objects for the project
+const scene = new THREE.Scene();
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(devicePixelRatio);
+document.body.appendChild(renderer.domElement);
+
+
+const raycaster = new THREE.Raycaster();
+
+const camera = new THREE.PerspectiveCamera(
+  75,
+  innerWidth / innerHeight,
+  0.1,
+  1000
+); camera.position.z = 120; // Change camera position
+
+// Create a plane object..
+const planeGeometry = new THREE.PlaneGeometry(
+  world.plane.width,
+  world.plane.height,
+  world.plane.widthSegments,
+  world.plane.heightSegments
+);
+// And give it a material
+const planeMaterial = new THREE.MeshPhongMaterial({
+  side: THREE.DoubleSide,
+  flatShading: THREE.FlatShading,
+  vertexColors: true
+});
+
+// Now we mesh them together and add it to the scene
+const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+scene.add(planeMesh);
+
+// And initialize it 
+generatePlane();
+
+// Adds a light source in front of the plane,
+// otherwise you won't see shit due to the material we used
+// for the plane (MeshPhong)
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(0, -1, 1);
+scene.add(light);
+
+
+/* This isn't necessary if you don't use orbitcontrol, since you won't see the backside of the plane
+// Adds a light source behind the plane
+const backLight = new THREE.DirectionalLight(0xffffff, 1);
+backLight.position.set(0, 0, -1);
+scene.add(backLight);
+*/
+
+// A lot of stuff going on for generating a new plane for the mesh
+// Study it thoroughly, use the docs and refer back to the video tutorial
 function generatePlane() {
   planeMesh.geometry.dispose()
   planeMesh.geometry = new THREE.PlaneGeometry(
@@ -63,62 +121,11 @@ function generatePlane() {
   );
 }
 
-// Creates new essential objects
-const raycaster = new THREE.Raycaster();
-const scene = new THREE.Scene();
-const renderer = new THREE.WebGLRenderer();
-const camera = new THREE.PerspectiveCamera(
-  75,
-  innerWidth / innerHeight,
-  0.1,
-  1000
-);
-
-
-renderer.setSize(innerWidth, innerHeight)
-renderer.setPixelRatio(devicePixelRatio)
-document.body.appendChild(renderer.domElement)
-
-new OrbitControls(camera, renderer.domElement)
-camera.position.z = 120; // Change camera position
-
-// Create a plane object..
-const planeGeometry = new THREE.PlaneGeometry(
-  world.plane.width,
-  world.plane.height,
-  world.plane.widthSegments,
-  world.plane.heightSegments
-);
-// And give it a material
-const planeMaterial = new THREE.MeshPhongMaterial({
-  side: THREE.DoubleSide,
-  flatShading: THREE.FlatShading,
-  vertexColors: true
-});
-
-// Now we mesh it together and add it to the scene
-const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
-scene.add(planeMesh);
-
-// And initialize it 
-generatePlane();
-
-// Adds a light source in front of the plane
-const light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(0, -1, 1);
-scene.add(light);
-
-// Adds a light source behind the plane
-const backLight = new THREE.DirectionalLight(0xffffff, 1);
-backLight.position.set(0, 0, -1);
-scene.add(backLight);
-
 // Creates a mouse object
 const mouse = {
   x: undefined,
   y: undefined
 }
-
 
 let frame = 0; // Gonna use this for animating the vertices
 
@@ -175,6 +182,7 @@ function animate() {
       b: 1
     }
 
+    // Using the gsap library to make the hover effect easier to achieve
     gsap.to(hoverColor, {
       r: initialColor.r,
       g: initialColor.g,
@@ -199,10 +207,9 @@ function animate() {
       }
     })
   }
-}
+} animate() // Don't forget to call the function!
 
-animate()
-
+// Tracking mouse movement
 addEventListener('mousemove', (event) => {
   mouse.x = (event.clientX / innerWidth) * 2 - 1
   mouse.y = -(event.clientY / innerHeight) * 2 + 1
